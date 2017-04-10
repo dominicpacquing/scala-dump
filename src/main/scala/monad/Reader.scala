@@ -17,11 +17,13 @@ object UserInfo {
   def name(id: Int): Reader[UserRepository, Option[String]] =
     Reader( (userRepository: UserRepository) => userRepository.find(id).map(_.name) )
 
+  // UserRepository => Map[String, Option[String]]
   def details(id: Int): Reader[UserRepository, Map[String, Option[String]]] =
-    for {
-      _email <- email(id) // the userRepository gets applied here too
-      _name  <- name(id)  // the userRepository gets applied here too
-    } yield Map("email" -> _email, "name" -> _name)
+    email(id).flatMap { opStringEmail =>
+      name(id).map { opStringName =>
+        Map("name" -> opStringName, "email" -> opStringEmail)
+      }
+    }
 }
 
 object ReaderMonad extends App {
